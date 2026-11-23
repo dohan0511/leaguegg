@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const db = require('./db/database');
 const matchesRouter = require('./routes/matches');
+const playersRouter = require('./routes/players');
 
 const app = express();
 app.set('json spaces', 2);
@@ -11,6 +12,7 @@ app.get('/health', (req, res) => {
     res.json({ ok: true });
 });
 app.use('/api/matches', matchesRouter);
+app.use('/api/players', playersRouter);
 
 const PORT = process.env.PORT || 3000;
 
