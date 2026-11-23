@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LeagueGG API 테스트</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <h1>LeagueGG API 테스트</h1>
+            <p>수집과 상세 조회 엔드포인트를 브라우저에서 실행합니다.</p>
+        </header>
+
+        <section class="card">
+            <h2>서버 상태</h2>
+            <button type="button" data-test="health">GET /health 실행</button>
+        </section>
+
+        <section class="card">
+            <h2>경기 수집 — FR-03 / FR-04</h2>
+            <form id="collect-form">
+                <label>
+                    Riot ID
+                    <input id="riot-id" name="riotId" value="Darkblue0511#111" required>
+                </label>
+                <label>
+                    수집 건수
+                    <input id="collect-count" name="count" type="number" min="1" max="10" value="3">
+                </label>
+                <div class="actions">
+                    <button type="submit">경기 수집</button>
+                    <button type="button" data-test="collect-invalid">잘못된 Riot ID</button>
+                    <button type="button" data-test="collect-limit">건수 999 테스트</button>
+                    <button type="button" data-test="collect-repeat">중복 수집</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>경기 상세 조회 — FR-06</h2>
+            <form id="detail-form">
+                <label>
+                    Match ID
+                    <input id="match-id" name="matchId" placeholder="수집 응답의 match_id">
+                </label>
+                <div class="actions">
+                    <button type="submit">상세 조회</button>
+                    <button type="button" data-test="detail-missing">존재하지 않는 경기</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>API 키 누락 테스트</h2>
+            <p>
+                서버를 종료한 뒤 키 없이 실행하고 경기 수집을 다시 테스트하세요.
+            </p>
+            <pre>set RIOT_API_KEY=
+npm run test:matches</pre>
+        </section>
+
+        <section class="card result-card">
+            <div class="result-header">
+                <h2>테스트 결과</h2>
+                <button type="button" id="clear-result">초기화</button>
+            </div>
+            <div id="status" class="status">실행 대기</div>
+            <pre id="response">결과가 여기에 표시됩니다.</pre>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
