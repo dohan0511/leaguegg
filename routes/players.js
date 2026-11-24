@@ -40,6 +40,27 @@ const updatePlayerLevelStmt = db.prepare(`
     WHERE player_id = ?
 `);
 
+const findRecentMatchesStmt = db.prepare(`
+    SELECT
+        gm.match_id,
+        gm.match_date,
+        gm.game_duration,
+        gm.game_mode,
+        gc.character_id,
+        gc.character_name,
+        mp.team_side,
+        mp.kills,
+        mp.deaths,
+        mp.assists,
+        mp.result
+    FROM MATCH_PARTICIPANT mp
+    JOIN GAME_MATCH gm ON gm.match_id = mp.match_id
+    JOIN GAME_CHARACTER gc ON gc.character_id = mp.character_id
+    WHERE mp.player_id = ?
+    ORDER BY gm.match_date DESC, gm.match_id DESC
+    LIMIT ?
+`);
+
 function escapeLikePattern(value) {
     return value
         .replace(/\\/g, '\\\\')
@@ -161,6 +182,40 @@ router.get('/:playerId', (req, res) => {
     }
 
     return res.json({ player });
+});
+
+// FR-05: 저장된 경기 기록을 기준으로 플레이어의 최근 전적 조회
+router.get('/:playerId/recent', (req, res) => {
+    const playerId = Number(req.params.playerId);
+    const requestedCount = Number(req.query.count || 10);
+
+    if (!Number.isInteger(playerId) || playerId <= 0) {
+        return res.status(400).json({
+            error: '유효한 playerId를 입력하세요.',
+        });
+    }
+
+    if (!Number.isInteger(requestedCount) || requestedCount < 1) {
+        return res.status(400).json({
+            error: 'count는 1 이상의 정수여야 합니다.',
+        });
+    }
+
+    const player = findPlayerByIdStmt.get(playerId);
+    if (!player) {
+        return res.status(404).json({
+            error: '해당 플레이어를 찾을 수 없습니다.',
+        });
+    }
+
+    const safeCount = Math.min(requestedCount, 50);
+    const matches = findRecentMatchesStmt.all(playerId, safeCount);
+
+    return res.json({
+        player,
+        count: matches.length,
+        matches,
+    });
 });
 
 module.exports = router;
