@@ -53,6 +53,21 @@
         </section>
 
         <section class="card">
+            <h2>전적 통계 — FR-07</h2>
+            <form id="stats-form">
+                <label>
+                    Player ID
+                    <input id="stats-player-id" name="playerId" type="number" min="1" value="1" required>
+                </label>
+                <div class="actions">
+                    <button type="submit">최근 10경기 통계 조회</button>
+                    <button type="button" id="load-more-stats" disabled>10경기 더 불러오기</button>
+                </div>
+            </form>
+            <p class="hint">처음에는 최근 10경기를 조회합니다. 추가 요청마다 10경기씩 늘리며, 결과에는 누적 조회 통계와 가장 오래된 매치 시각이 포함됩니다.</p>
+        </section>
+
+        <section class="card">
             <h2>API 키 누락 테스트</h2>
             <p>
                 서버를 종료한 뒤 키 없이 실행하고 경기 수집을 다시 테스트하세요.

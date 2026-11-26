@@ -32,6 +32,7 @@ leaguegg/
 │   ├── database.js       # better-sqlite3 연결 및 테이블 초기화
 │   └── leaguegg.db       # 로컬 SQLite DB 파일 (자동 생성, Git 추적 제외)
 ├── services/
+|   └── matchStorage.js   # 공통 매치 저장 트랜잭션
 │   └── riotApi.js        # Riot API 호출 및 응답 데이터 정규화
 ├── routes/
 │   ├── players.js        # FR-01, FR-02, FR-05, FR-07, FR-08
@@ -64,3 +65,4 @@ npm start
 ## 기존 모델링에서 변경된 점
 
 * `GAME_MATCH` 테이블의 `match_id` 컬럼이 Riot API의 고유 매치 ID 형식에 맞춰 `TEXT PRIMARY KEY`로 정의가 변경되었습니다.
+* API RATE LIMIT을 방지하기 위해, **FR-07 전적 통계**의 기능을 수행하는 `GET /api/players/:playerId/stats`은 Riot API에서 해당 플레이어의 최근 매치 최대 10개의 매치 ID를 가져와 DB에 없는 매치만 상세 정보를 가져와 저장한 다음, 이 조회 범위에 대한 경기 수·승·패·승률을 반환하는 방식으로 기능이 부분적으로 변경되었습니다. 그리고 이후, 앱 내 버튼을 통해 `GET /api/players/:playerId/stats?count=XX`를 실행하여 최대 100경기까지 10경기씩 조회를 늘릴 수 있도록 했습니다. 응답의 `data_window.oldest_match_timestamp`는 가장 오래된 매치 시작 시각의 Unix 밀리초이며, `data_window.oldest_match_date`에는 ISO 형식 시각이 포함됩니다.

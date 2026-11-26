@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db/database');
+const { saveNormalizedMatches } = require('../services/matchStorage');
 const {
     fetchPlayerProfileByRiotId,
     fetchMatchIdsByPuuid,
@@ -9,66 +10,6 @@ const {
 } = require('../services/riotApi');
 
 const router = express.Router();
-
-// Prepared Statements
-const findPlayerByNameStmt = db.prepare('SELECT player_id, player_level FROM PLAYER WHERE player_name = ?');
-const insertPlayerStmt = db.prepare('INSERT INTO PLAYER (player_name, player_level) VALUES (?, ?)');
-const updatePlayerLevelStmt = db.prepare('UPDATE PLAYER SET player_level = MAX(player_level, ?) WHERE player_id = ?');
-
-const insertCharacterStmt = db.prepare('INSERT OR IGNORE INTO GAME_CHARACTER (character_name) VALUES (?)');
-const findCharacterByNameStmt = db.prepare('SELECT character_id FROM GAME_CHARACTER WHERE character_name = ?');
-
-const insertMatchStmt = db.prepare(
-    'INSERT OR IGNORE INTO GAME_MATCH (match_id, match_date, game_duration, game_mode) VALUES (?, ?, ?, ?)'
-);
-
-const insertParticipantStmt = db.prepare(`
-    INSERT OR IGNORE INTO MATCH_PARTICIPANT (
-        match_id, player_id, character_id, team_side, kills, deaths, assists, result
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-`);
-
-function getOrCreatePlayerId(playerName, playerLevel) {
-    const existing = findPlayerByNameStmt.get(playerName);
-    if (existing) {
-        updatePlayerLevelStmt.run(playerLevel, existing.player_id);
-        return existing.player_id;
-    }
-    return insertPlayerStmt.run(playerName, playerLevel).lastInsertRowid;
-}
-
-function getOrCreateCharacterId(characterName) {
-    insertCharacterStmt.run(characterName);
-    return findCharacterByNameStmt.get(characterName).character_id;
-}
-
-// 한 경기와 참여자 목록을 단일 트랜잭션으로 저장
-const saveNormalizedMatchTx = db.transaction(({ match, participants }) => {
-    const matchId = match.match_id;
-
-    insertMatchStmt.run(
-        matchId,
-        match.match_date,
-        match.game_duration,
-        match.game_mode
-    );
-
-    for (const p of participants) {
-        const playerId = getOrCreatePlayerId(p.player_name, p.player_level);
-        const characterId = getOrCreateCharacterId(p.character_name);
-
-        insertParticipantStmt.run(
-            matchId,
-            playerId,
-            characterId,
-            p.team_side,
-            p.kills,
-            p.deaths,
-            p.assists,
-            p.result
-        );
-    }
-});
 
 // FR-03 & FR-04: Riot ID 기준 최근 경기 수집 및 DB 저장
 router.post('/collect', async (req, res) => {
@@ -99,7 +40,7 @@ router.post('/collect', async (req, res) => {
             );
             const normalized = normalizeMatchData(matchDto);
             normalized.match.match_id = riotMatchId;
-            saveNormalizedMatchTx(normalized);
+            saveNormalizedMatches([normalized]);
 
             savedMatches.push({
                 match_id: riotMatchId,
