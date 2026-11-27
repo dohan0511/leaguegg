@@ -69,6 +69,24 @@ const findRecentMatchesStmt = db.prepare(`
     LIMIT ?
 `);
 
+const findCharacterStatsStmt = db.prepare(`
+    SELECT
+        gc.character_id,
+        gc.character_name,
+        COUNT(*) AS match_count,
+        SUM(CASE WHEN mp.result = 'WIN' THEN 1 ELSE 0 END) AS wins,
+        SUM(CASE WHEN mp.result = 'LOSE' THEN 1 ELSE 0 END) AS losses,
+        ROUND(
+            100.0 * SUM(CASE WHEN mp.result = 'WIN' THEN 1 ELSE 0 END) / COUNT(*),
+            2
+        ) AS win_rate
+    FROM MATCH_PARTICIPANT mp
+    JOIN GAME_CHARACTER gc ON gc.character_id = mp.character_id
+    WHERE mp.player_id = ?
+    GROUP BY gc.character_id, gc.character_name
+    ORDER BY match_count DESC, gc.character_name ASC
+`);
+
 const findCachedMatchForPlayerStmt = db.prepare(`
     SELECT gm.match_date
     FROM GAME_MATCH gm
@@ -471,6 +489,31 @@ router.get('/:playerId/stats', async (req, res) => {
 
         return res.status(status).json({ error: err.message });
     }
+});
+
+// FR-08: DB에 저장된 플레이어의 캐릭터별 경기 수와 승률을 조회합니다.
+router.get('/:playerId/characters', (req, res) => {
+    const playerId = Number(req.params.playerId);
+
+    if (!Number.isInteger(playerId) || playerId <= 0) {
+        return res.status(400).json({
+            error: '유효한 playerId를 입력하세요.',
+        });
+    }
+
+    const player = findPlayerByIdStmt.get(playerId);
+    if (!player) {
+        return res.status(404).json({
+            error: '해당 플레이어를 찾을 수 없습니다.',
+        });
+    }
+
+    const characters = findCharacterStatsStmt.all(playerId);
+    return res.json({
+        player,
+        count: characters.length,
+        characters,
+    });
 });
 
 module.exports = router;
