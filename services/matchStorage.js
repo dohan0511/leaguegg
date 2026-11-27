@@ -53,7 +53,7 @@ function getOrCreateCharacterId(characterName) {
     return findCharacterByNameStmt.get(characterName).character_id;
 }
 
-// 정규화된 경기와 모든 참가자 정보를 데이터베이스에 기록합니다.
+// 정규화된 게임과 모든 참가자 정보를 데이터베이스에 기록합니다.
 function saveNormalizedMatch({ match, participants }) {
     const matchId = match.match_id;
 
@@ -84,14 +84,14 @@ function saveNormalizedMatch({ match, participants }) {
     }
 }
 
-// 여러 경기를 하나의 트랜잭션으로 저장해 중간 실패 시 전체 변경을 취소합니다.
+// 여러 게임을 하나의 트랜잭션으로 저장해 중간 실패 시 전체 변경을 취소합니다.
 const saveNormalizedMatchesTx = db.transaction((matches) => {
     for (const match of matches) {
         saveNormalizedMatch(match);
     }
 });
 
-// 경기 저장 트랜잭션을 실행하는 외부 호출용 함수입니다.
+// 게임 저장 트랜잭션을 실행하는 외부 호출용 함수입니다.
 function saveNormalizedMatches(matches) {
     return saveNormalizedMatchesTx(matches);
 }

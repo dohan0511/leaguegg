@@ -280,7 +280,7 @@ router.get('/:playerId', (req, res) => {
     return res.json({ player });
 });
 
-// FR-05: 저장된 경기 기록을 기준으로 플레이어의 최근 전적 조회
+// FR-05: 저장된 게임 기록을 기준으로 플레이어의 최근 전적 조회
 router.get('/:playerId/recent', (req, res) => {
     const playerId = Number(req.params.playerId);
     const requestedCount = Number(req.query.count || 10);
@@ -314,7 +314,7 @@ router.get('/:playerId/recent', (req, res) => {
     });
 });
 
-// FR-07: 최근 10경기를 수집한 뒤 해당 범위의 전적 통계를 조회
+// FR-07: 최근 10게임을 수집한 뒤 해당 범위의 전적 통계를 조회
 router.get('/:playerId/stats', async (req, res) => {
     const playerId = Number(req.params.playerId);
     const requestedCount = req.query.count === undefined
@@ -361,7 +361,7 @@ router.get('/:playerId/stats', async (req, res) => {
         const matchIds = await fetchMatchIdsByPuuid(profile.puuid, requestedCount);
 
         if (!Array.isArray(matchIds) || matchIds.some((matchId) => typeof matchId !== 'string' || !matchId)) {
-            const error = new Error('Riot API의 매치 목록 응답이 올바르지 않습니다.');
+            const error = new Error('Riot API의 게임 목록 응답이 올바르지 않습니다.');
             error.status = 502;
             throw error;
         }
@@ -396,7 +396,7 @@ router.get('/:playerId/stats', async (req, res) => {
                 : -1;
 
             if (targetParticipantIndex < 0) {
-                const error = new Error(`매치 ${riotMatchId}에서 요청 플레이어를 찾을 수 없습니다.`);
+                const error = new Error(`게임 ${riotMatchId}에서 요청 플레이어를 찾을 수 없습니다.`);
                 error.status = 502;
                 throw error;
             }
@@ -491,7 +491,7 @@ router.get('/:playerId/stats', async (req, res) => {
     }
 });
 
-// FR-08: DB에 저장된 플레이어의 캐릭터별 경기 수와 승률을 조회합니다.
+// FR-08: DB에 저장된 플레이어의 캐릭터별 게임 수와 승률을 조회합니다.
 router.get('/:playerId/characters', (req, res) => {
     const playerId = Number(req.params.playerId);
 

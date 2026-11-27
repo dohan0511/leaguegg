@@ -18,11 +18,11 @@ const PORT = process.env.PORT || 3000;
 
 function startServer() {
     const server = app.listen(PORT, () => {
-        console.log(`Matches test server running at http://localhost:${PORT}`);
+        console.log(`App server running at http://localhost:${PORT}`);
     });
 
     server.on('error', (err) => {
-        console.error(`테스트 서버를 시작할 수 없습니다: ${err.message}`);
+        console.error(`앱 서버를 시작할 수 없습니다: ${err.message}`);
         db.close();
         process.exitCode = 1;
     });
@@ -36,7 +36,7 @@ function startServer() {
 
         server.close((err) => {
             if (err) {
-                console.error(`테스트 서버를 종료할 수 없습니다: ${err.message}`);
+                console.error(`앱 서버를 종료할 수 없습니다: ${err.message}`);
                 process.exitCode = 1;
             }
             db.close();

@@ -3,89 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LeagueGG API 테스트</title>
+    <meta name="theme-color" content="#101322">
+    <meta name="description" content="LeagueGG에서 플레이어의 리그 오브 레전드 전적과 통계를 확인하세요.">
+    <title>LeagueGG — 플레이어 전적 검색</title>
     <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
 </head>
 <body>
-    <main class="container">
-        <header>
-            <h1>LeagueGG API 테스트</h1>
-            <p>수집과 상세 조회 엔드포인트를 브라우저에서 실행합니다.</p>
+    <main id="search-screen" class="search-screen">
+        <header class="landing-header">
+            <a class="brand" href="/" aria-label="LeagueGG 메인">
+                <span>League<span class="brand-accent">GG</span></span>
+            </a>
+            <span class="header-caption">LEAGUE OF LEGENDS STATS</span>
         </header>
 
-        <section class="card">
-            <h2>서버 상태</h2>
-            <button type="button" data-test="health">GET /health 실행</button>
-        </section>
+        <section class="search-hero" aria-labelledby="search-title">
+            <div class="hero-orb" aria-hidden="true"><span>GG</span></div>
+            <h1 id="search-title">League<span class="brand-accent">GG</span></h1>
+            <p class="hero-description">플레이어의 게임 기록과 통계를 한눈에 확인하세요.</p>
 
-        <section class="card">
-            <h2>경기 수집 — FR-03 / FR-04</h2>
-            <form id="collect-form">
-                <label>
-                    Riot ID
-                    <input id="riot-id" name="riotId" value="Darkblue0511#111" required>
-                </label>
-                <label>
-                    수집 건수
-                    <input id="collect-count" name="count" type="number" min="1" max="10" value="3">
-                </label>
-                <div class="actions">
-                    <button type="submit">경기 수집</button>
-                    <button type="button" data-test="collect-invalid">잘못된 Riot ID</button>
-                    <button type="button" data-test="collect-limit">건수 999 테스트</button>
-                    <button type="button" data-test="collect-repeat">중복 수집</button>
+            <form id="search-form" class="search-form">
+                <label class="sr-only" for="player-query">플레이어 이름 또는 Riot ID</label>
+                <div class="search-control">
+                    <span class="search-icon" aria-hidden="true">⌕</span>
+                    <input
+                        id="player-query"
+                        name="query"
+                        type="search"
+                        placeholder="플레이어 이름#태그라인"
+                        autocomplete="off"
+                        maxlength="100"
+                        required
+                    >
+                    <button id="search-submit" type="submit">
+                        <span>전적 검색</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
                 </div>
             </form>
+            <p class="search-hint">Riot ID 전체를 입력하면 플레이어를 바로 찾을 수 있습니다.</p>
+            <p id="search-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <div id="search-results" class="search-results" aria-live="polite"></div>
         </section>
 
-        <section class="card">
-            <h2>경기 상세 조회 — FR-06</h2>
-            <form id="detail-form">
-                <label>
-                    Match ID
-                    <input id="match-id" name="matchId" placeholder="수집 응답의 match_id">
-                </label>
-                <div class="actions">
-                    <button type="submit">상세 조회</button>
-                    <button type="button" data-test="detail-missing">존재하지 않는 경기</button>
-                </div>
-            </form>
-        </section>
-
-        <section class="card">
-            <h2>전적 통계 — FR-07</h2>
-            <form id="stats-form">
-                <label>
-                    Player ID
-                    <input id="stats-player-id" name="playerId" type="number" min="1" value="1" required>
-                </label>
-                <div class="actions">
-                    <button type="submit">최근 10경기 통계 조회</button>
-                    <button type="button" id="load-more-stats" disabled>10경기 더 불러오기</button>
-                </div>
-            </form>
-            <p class="hint">처음에는 최근 10경기를 조회합니다. 추가 요청마다 10경기씩 늘리며, 결과에는 누적 조회 통계와 가장 오래된 매치 시각이 포함됩니다.</p>
-        </section>
-
-        <section class="card">
-            <h2>API 키 누락 테스트</h2>
-            <p>
-                서버를 종료한 뒤 키 없이 실행하고 경기 수집을 다시 테스트하세요.
-            </p>
-            <pre>set RIOT_API_KEY=
-npm run test:matches</pre>
-        </section>
-
-        <section class="card result-card">
-            <div class="result-header">
-                <h2>테스트 결과</h2>
-                <button type="button" id="clear-result">초기화</button>
-            </div>
-            <div id="status" class="status">실행 대기</div>
-            <pre id="response">결과가 여기에 표시됩니다.</pre>
-        </section>
+        <footer class="landing-footer">
+            <span>LEAGUEGG</span>
+            <span>플레이 데이터 기반 전적 서비스</span>
+        </footer>
     </main>
 
-    <script src="/app.js"></script>
+    <div id="profile-screen" class="profile-screen" hidden>
+        <header class="topbar">
+            <a class="brand" href="/" id="home-link" aria-label="LeagueGG 메인으로 이동">
+                <span>League<span class="brand-accent">GG</span></span>
+            </a>
+            <div class="topbar-player">
+                <span class="topbar-label">PLAYER</span>
+                <strong id="topbar-player-name">-</strong>
+            </div>
+            <button id="new-search-button" class="subtle-button" type="button">다른 플레이어 검색</button>
+        </header>
+
+        <main class="profile-content">
+            <section class="profile-banner panel" aria-labelledby="profile-name">
+                <div class="player-avatar" aria-hidden="true"><span id="avatar-initial">?</span></div>
+                <div class="profile-title">
+                    <p class="eyebrow">PLAYER PROFILE</p>
+                    <h1 id="profile-name">플레이어</h1>
+                    <p id="profile-riot-id" class="muted">Riot ID</p>
+                </div>
+                <div class="level-badge">
+                    <span>플레이어 레벨</span>
+                    <strong id="profile-level">-</strong>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <section class="panel info-panel" aria-labelledby="info-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="info-heading">플레이어 정보</h2>
+                        </div>
+                        <span class="panel-icon" aria-hidden="true">◈</span>
+                    </div>
+                    <dl class="info-list">
+                        <div><dt>플레이어 이름</dt><dd id="info-player-name">불러오는 중</dd></div>
+                        <div><dt>플레이어 ID</dt><dd id="info-player-id">-</dd></div>
+                        <div><dt>레벨</dt><dd id="info-player-level">-</dd></div>
+                    </dl>
+                </section>
+
+                <section class="panel stats-panel" aria-labelledby="stats-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="stats-heading">최근 전적 통계</h2>
+                        </div>
+                        <span class="panel-icon" aria-hidden="true">◉</span>
+                    </div>
+                    <p id="stats-summary" class="panel-message" role="status" aria-live="polite">
+                        최근 10게임 통계를 불러오는 중입니다.
+                    </p>
+                    <div id="stats-content" class="stats-content" hidden>
+                        <div class="win-rate-block">
+                            <span class="metric-label">승률</span>
+                            <strong id="stats-win-rate">0%</strong>
+                            <span id="stats-match-count" class="muted">0게임</span>
+                        </div>
+                        <div class="record-block">
+                            <div class="record-numbers">
+                                <span class="win-text"><strong id="stats-wins">0</strong>승</span>
+                                <span class="loss-text"><strong id="stats-losses">0</strong>패</span>
+                            </div>
+                            <div class="record-track" aria-hidden="true">
+                                <span id="stats-win-bar"></span>
+                            </div>
+                            <p id="stats-window-note" class="muted"></p>
+                        </div>
+                    </div>
+                    <button id="load-more-stats" class="outline-button" type="button" hidden>
+                        10게임 더 불러오기
+                    </button>
+                </section>
+
+                <section class="panel character-panel" aria-labelledby="characters-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="characters-heading">캐릭터별 통계</h2>
+                        </div>
+                        <span class="panel-icon" aria-hidden="true">✦</span>
+                    </div>
+                    <p id="characters-message" class="panel-message" role="status" aria-live="polite">
+                        캐릭터 통계를 불러오는 중입니다.
+                    </p>
+                    <div id="character-list" class="character-list"></div>
+                </section>
+
+                <section class="panel matches-panel" aria-labelledby="matches-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="matches-heading">최근 게임</h2>
+                        </div>
+                        <span class="section-caption">저장된 최근 기록</span>
+                    </div>
+                    <p id="matches-message" class="panel-message" role="status" aria-live="polite">
+                        최근 게임을 불러오는 중입니다.
+                    </p>
+                    <div id="match-list" class="match-list"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="match-dialog" class="match-dialog" aria-labelledby="match-dialog-title">
+        <div class="dialog-content">
+            <div class="dialog-heading">
+                <div>
+                    <h2 id="match-dialog-title">게임 상세</h2>
+                    <p id="match-dialog-meta" class="muted"></p>
+                </div>
+                <button id="close-match-dialog" class="icon-button" type="button" aria-label="상세 창 닫기">×</button>
+            </div>
+            <p id="match-dialog-message" class="panel-message" role="status" aria-live="polite"></p>
+            <div id="participant-list" class="participant-list"></div>
+        </div>
+    </dialog>
 </body>
 </html>

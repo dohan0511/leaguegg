@@ -11,7 +11,7 @@ const {
 
 const router = express.Router();
 
-// FR-03 & FR-04: Riot ID 기준 최근 경기 수집 및 DB 저장
+// FR-03 & FR-04: Riot ID 기준 최근 게임 수집 및 DB 저장
 router.post('/collect', async (req, res) => {
     try {
         const { riotId, count = 3 } = req.body || {};
@@ -31,7 +31,7 @@ router.post('/collect', async (req, res) => {
         const savedMatches = [];
 
         if (!Array.isArray(matchIds)) {
-            throw new Error('Riot API의 매치 목록 응답이 올바르지 않습니다.');
+            throw new Error('Riot API의 게임 목록 응답이 올바르지 않습니다.');
         }
 
         for (const riotMatchId of matchIds) {
@@ -59,7 +59,7 @@ router.post('/collect', async (req, res) => {
     }
 });
 
-// FR-06: 경기 상세 조회 (경기 정보 + 참여자 목록)
+// FR-06: 게임 상세 조회 (게임 정보 + 참여자 목록)
 router.get('/:matchId', (req, res) => {
     const matchId = req.params.matchId;
 
@@ -70,7 +70,7 @@ router.get('/:matchId', (req, res) => {
     `).get(matchId);
 
     if (!match) {
-        return res.status(404).json({ error: '해당 경기를 찾을 수 없습니다.' });
+        return res.status(404).json({ error: '해당 게임을 찾을 수 없습니다.' });
     }
 
     const participants = db.prepare(`

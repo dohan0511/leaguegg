@@ -68,7 +68,7 @@ async function fetchPlayerProfileByRiotId(riotId) {
   };
 }
 
-// PUUID 기준 최근 매치 ID 목록 조회
+// PUUID 기준 최근 게임 ID 목록 조회
 async function fetchMatchIdsByPuuid(puuid, count = 5) {
   return riotFetch(
     `${MATCH_HOST}/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${count}`
