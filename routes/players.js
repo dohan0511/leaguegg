@@ -10,6 +10,7 @@ const {
 const { saveNormalizedMatches } = require('../services/matchStorage');
 
 const router = express.Router();
+const MAX_STATS_MATCH_COUNT = 50;
 
 const searchPlayersStmt = db.prepare(`
     SELECT
@@ -149,7 +150,7 @@ function createCachedStatsResponse(player, matches, requestedCount, warning) {
             source: 'database',
             complete: isComplete,
             next_count: isComplete
-                ? (requestedCount < 100 ? requestedCount + 10 : null)
+                ? (requestedCount < MAX_STATS_MATCH_COUNT ? requestedCount + 10 : null)
                 : requestedCount,
             oldest_match_timestamp: Number.isFinite(oldestMatchTimestamp)
                 ? oldestMatchTimestamp
@@ -310,10 +311,10 @@ router.get('/:playerId/stats', async (req, res) => {
 
     if (!Number.isInteger(requestedCount) ||
         requestedCount < 10 ||
-        requestedCount > 100 ||
+        requestedCount > MAX_STATS_MATCH_COUNT ||
         requestedCount % 10 !== 0) {
         return res.status(400).json({
-            error: 'count는 10부터 100까지 10의 배수로 입력하세요.',
+            error: `count는 10부터 ${MAX_STATS_MATCH_COUNT}까지 10의 배수로 입력하세요.`,
         });
     }
 
@@ -432,7 +433,8 @@ router.get('/:playerId/stats', async (req, res) => {
                 database_match_details_reused: cachedMatches,
                 source: 'riot+database',
                 complete: true,
-                next_count: matchIds.length === requestedCount && requestedCount < 100
+                next_count: matchIds.length === requestedCount &&
+                    requestedCount < MAX_STATS_MATCH_COUNT
                     ? requestedCount + 10
                     : null,
                 oldest_match_timestamp: oldestMatchTimestamp,
